@@ -1,20 +1,25 @@
+import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
-import java.util.Observable;
-
-import java.awt.HeadlessException;
-import java.awt.Toolkit;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Observable;
 
 
 class ClipboardTextListener extends Observable implements Runnable {
-
+    ClientManager clientManager;
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-
     private volatile boolean running = true;
+
+    public ClipboardTextListener() throws NoSuchAlgorithmException {
+        clientManager = new ClientManager();
+    }
+
+    public ClipboardTextListener(ClientManager clientManager) {
+        this.clientManager = clientManager;
+    }
 
     public void terminate() {
         running = false;
@@ -41,12 +46,17 @@ class ClipboardTextListener extends Observable implements Runnable {
                         lastContent = data;
                         // Do whatever you want to do when a clipboard change was detected, e.g.:
                         System.out.println("New clipboard text detected: " + data);
+                        clientManager.encryptText(data);
+
                         setChanged();
                         notifyObservers(data);
+                        JLabel label = new JLabel(data, JLabel.LEFT);
+                        label.setForeground(Color.white);
+                        GUI.centerPanel.add(label);
                     }
                 }
 
-            } catch (HeadlessException | UnsupportedFlavorException | IOException e1) {
+            } catch (Exception e1) {
                 e1.printStackTrace();
             }
         }
