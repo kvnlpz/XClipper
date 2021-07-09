@@ -1,34 +1,28 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.FlavorEvent;
 import java.awt.datatransfer.FlavorListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.prefs.Preferences;
 
 public class GUI {
-    static JPanel centerPanel;
+    static JList centerPanel;
+    static DefaultListModel defaultListModel;
 
     public static void main(String[] args) throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchAlgorithmException {
         int width = 600, height = 400;
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//        ClientManager clientManager = new ClientManager();
-
-        // Retrieve the user preference node for the package com.mycompany
         Preferences prefs = Preferences.userNodeForPackage(GUI.class);
-
-        // Preference key name
         final String PREF_NAME = "open_minimized";
-
-
         String defaultValue = "false";
-
-        // default value is returned if the preference does not exist
         String propertyValue = prefs.get(PREF_NAME, defaultValue);
-        // Get the value of the preference;
-
-
         String programText = "";
         if (propertyValue.equals("false")) {
             programText = "the program is set to open up normally";
@@ -37,29 +31,33 @@ public class GUI {
             programText = "The program is set to open up minimized";
         }
 
+        checkFirstTime();
 
-        //check for OS
-        //System.getProperties().list(System.out);  //<- more information
+
+
+
+
+
+
+
         System.out.println();
         System.out.println("Your operating system is: " + System.getProperty("os.name"));
 
         ClipboardTextListener clipboardTextListener = new ClipboardTextListener();
         Thread thread = new Thread(clipboardTextListener);
-        // start event listener
-        //startEventListener();
-        //first time running application?
-        //  prompt user for info
-        //no?
-        //  run in background at bootup
+//        ServerHandler serverHandler = new ServerHandler();
+
 
 
         JFrame frame = new JFrame("XClipper");
         frame.setBackground(new Color(55, 62, 65));
-//        frame.setBackground(Color.getHSBColor(198, 15, 25));
         frame.setLayout(new BorderLayout());
+
 
         JPanel northPanel = new JPanel(new FlowLayout());
         northPanel.setBackground(new Color(55, 62, 65));
+        northPanel.setPreferredSize(new Dimension(400, 100));
+
 
         JTextField usernameField = new JTextField("\t\t");
         JTextField passwordField = new JTextField("\t\t");
@@ -81,8 +79,6 @@ public class GUI {
 
             }
         });
-
-
         passwordField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -101,55 +97,87 @@ public class GUI {
             }
         });
 
+        JButton signUpButton = new JButton("Sign Up");
+//        signUpButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    serverHandler.signUp(usernameField.getText(), passwordField.getText());
+//                } catch (JsonProcessingException jsonProcessingException) {
+//                    jsonProcessingException.printStackTrace();
+//                }
+//            }
+//        });
 
-        usernameField.setSize(width / 3, 10);
-        passwordField.setSize(width / 3, 10);
         JButton loginButton = new JButton("Log In");
+//        loginButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    serverHandler.logIn(usernameField.getText(), passwordField.getText());
+//                } catch (JsonProcessingException jsonProcessingException) {
+//                    jsonProcessingException.printStackTrace();
+//                }
+//            }
+//        });
 
         northPanel.add(usernameField);
         northPanel.add(passwordField);
+        northPanel.add(signUpButton);
         northPanel.add(loginButton);
 
-        centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+        defaultListModel = new DefaultListModel();
+        centerPanel = new JList(defaultListModel);
+        centerPanel.setForeground(Color.white);
+        centerPanel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        centerPanel.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        centerPanel.setVisibleRowCount(-1);
         centerPanel.setBackground(new Color(55, 62, 65));
+
+
         JScrollPane centerPanelScrollPane = new JScrollPane(centerPanel);
-        centerPanel.setPreferredSize(new Dimension(400, 200));
-        centerPanelScrollPane.setPreferredSize(new Dimension(400, 200));
+        centerPanelScrollPane.setPreferredSize(new Dimension(300, 80));
 
+
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        JTextPane tp = new JTextPane();
-//        tp.setPreferredSize(new Dimension(384, 256));
-
-//        JButton button = new JButton("minimized mode");
-//        button.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                 Set the value of the preference
-//                String newValue = "true";
-//                prefs.put(PREF_NAME, newValue);
-//            }
-//        });
-//        JTextArea textArea = new JTextArea(programText);
-
         frame.add(northPanel, BorderLayout.NORTH);
         frame.add(centerPanelScrollPane, BorderLayout.CENTER);
-
-
-//        frame.add(button);
-//        frame.add(textArea);
-//        frame.getContentPane().add(textArea);
         frame.setPreferredSize(new Dimension(400, 400));
         frame.setSize(400, 400);
-//        frame.pack();
         frame.setVisible(true);
+        thread.start();
+
+    }
+
+    private static void checkFirstTime() {
+        //we check if it's the first time running the program by checking if a file exists in the path
+        Path currentRelativePath = Paths.get("");
+        String s = currentRelativePath.toAbsolutePath().toString();
+        System.out.println("Current absolute path is: " + s);
+
+        String path = s + File.separator + "run.txt";
+        // Use relative path for Unix systems
+        File f = new File(path);
+
+        f.getParentFile().mkdirs();
 
 
-        if (propertyValue.equals("true")) {
-            frame.setState(Frame.ICONIFIED);
+        if(!f.exists()){
+            System.out.println("File does not exist, so first time running.");
+            try {
+                f.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        else{
+            System.out.println("File exists, so program has been run before.");
         }
 
 
-        thread.start();
+
     }
 
     private static void startEventListener() {
