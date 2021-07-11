@@ -26,7 +26,7 @@ app.use(session({
     unset: 'destroy',
     cookie: {
         maxAge: 600000,
-        secure: true
+        secure: false
     } 
 }));
 
@@ -39,5 +39,5 @@ const authRoutes = require('./routes/authenticateRoutes');
 app.use(authRoutes);
 
 databaseConnection(() => {
-    http.createServer(app).listen(config.get('devlopment_port'));
+    http.createServer(app).listen(config.get('devlopment_port_rest'));
 });
