@@ -33,7 +33,13 @@ module.exports = (io, sessionMiddleware) => {
             socket.emit('refresh', userClips);
         }, 10000);
 
-        // Emit event when a socket sends new clip
+        // Event when the client requests a refresh
+        socket.on('requestRefresh', async () => {
+            const userClips = await Clip.find({username: username});
+            socket.emit('refresh', userClips);
+        });
+
+        // Event when a socket client sends new clip
         socket.on('sendNewClip', async (clip) => {
             console.log(clip);
             // Emit to others in the room that a new clip has arrived
