@@ -29,8 +29,8 @@ public class ClientManager {
         byte[] inputBytes = text.getBytes(StandardCharsets.UTF_8);
         byte[] encryptedTextInBytes = crypto.encrypt(inputBytes, secretKeySpec);
         String encryptedText = new String(encryptedTextInBytes, StandardCharsets.UTF_8);
-        System.out.println("This is the encrypted text: ");
-        System.out.println(encryptedText);
+//        System.out.println("This is the encrypted text: ");
+//        System.out.println(encryptedText);
         decryptText(encryptedTextInBytes);
 
     }
@@ -40,8 +40,8 @@ public class ClientManager {
 
         byte[] encryptedTextInBytes = crypto.decrypt(textToDecrypt, secretKeySpec);
         String decryptedText = new String(encryptedTextInBytes, StandardCharsets.UTF_8);
-        System.out.println("This is the decrypted text: ");
-        System.out.println(decryptedText);
+//        System.out.println("This is the decrypted text: ");
+//        System.out.println(decryptedText);
 
 
     }
