@@ -47,7 +47,7 @@ module.exports = (io, sessionMiddleware) => {
             console.log(sanitizeClip);
             
             // Emit to others in the room that a new clip has arrived
-            socket.to(username).emit('recieveNewClip', sanitizeClip);
+            socket.to(username).emit('receiveNewClip', sanitizeClip);
 
             // Add clip to the database
             const newClip = new Clip({username: username, clip: sanitizeClip});
