@@ -1,4 +1,3 @@
-const { sanitize } = require('express-validator');
 const xss = require('xss');
 
 const Clip = require('../model/clipModel');
