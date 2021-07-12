@@ -1,3 +1,5 @@
+const { sanitize } = require('express-validator');
+const xss = require('xss');
 
 const Clip = require('../model/clipModel');
 
@@ -41,12 +43,15 @@ module.exports = (io, sessionMiddleware) => {
 
         // Event when a socket client sends new clip
         socket.on('sendNewClip', async (clip) => {
-            console.log(clip);
+            const sanitizeClip = xss(clip);
+
+            console.log(sanitizeClip);
+            
             // Emit to others in the room that a new clip has arrived
-            socket.to(username).emit('recieveNewClip', clip);
+            socket.to(username).emit('recieveNewClip', sanitizeClip);
 
             // Add clip to the database
-            const newClip = new Clip({username: username, clip: clip});
+            const newClip = new Clip({username: username, clip: sanitizeClip});
             await newClip.save();
 
             // Emit to sender that the clip was sent successfully
