@@ -67,6 +67,7 @@ class ClipboardTextListener extends Observable implements Runnable {
                         panel.add(textArea, BorderLayout.CENTER);
                         panel.add(button, BorderLayout.EAST);
                         mainList.add(panel, gbc, 0);
+                        GUI.serverHandler.uploadText(data);
                         frame.validate();
                         frame.repaint();
                     }
@@ -119,7 +120,7 @@ class ClipboardTextListener extends Observable implements Runnable {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setPreferredSize(new Dimension(200, 50));
-        panel.setBorder(new MatteBorder(0, 0, 1, 0, Color.GRAY));
+        panel.setBorder(new MatteBorder(0, 0, 1, 0, themeColor));
         panel.setBackground(themeColor);
         panel.setForeground(Color.white);
         return panel;

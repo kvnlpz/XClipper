@@ -1,3 +1,5 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
 
 public class GUI {
@@ -17,7 +20,11 @@ public class GUI {
     static DefaultListModel defaultListModel;
     static Color themeColor = new Color(55, 62, 65);
     static private JPanel mainList;
-
+    static EmptyBorder border;
+    static ServerHandler serverHandler;
+    static  JFrame frame;
+    static JPanel northPanel;
+    static JScrollPane centerPanelScrollPane;
     public static void main(String[] args) throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchAlgorithmException {
         int width = 600, height = 400;
 //        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -43,21 +50,22 @@ public class GUI {
 
         mainList = new JPanel(new GridBagLayout());
         mainList.setBackground(themeColor);
-//        ServerHandler serverHandler = new ServerHandler();
+        serverHandler = new ServerHandler();
 
 
-        JFrame frame = new JFrame("XClipper");
+       frame = new JFrame("XClipper");
         ClipboardTextListener clipboardTextListener = new ClipboardTextListener(mainList, frame, themeColor);
         Thread thread = new Thread(clipboardTextListener);
         frame.setBackground(themeColor);
         frame.setLayout(new BorderLayout());
 
 
-        JPanel northPanel = new JPanel(new FlowLayout());
+        northPanel = new JPanel(new BorderLayout());
         northPanel.setBackground(themeColor);
         northPanel.setPreferredSize(new Dimension(400, 50));
-        EmptyBorder border = new EmptyBorder(0, 0, 0, 0);
+        border = new EmptyBorder(0, 0, 0, 0);
         northPanel.setBorder(border);
+
 
 
         JLabel titleLabel = new JLabel("Clipboard History");
@@ -167,7 +175,9 @@ public class GUI {
 //            }
 //        });
 
-        northPanel.add(titleLabel);
+        JButton trashButton = createButton();
+        northPanel.add(titleLabel, BorderLayout.WEST);
+        northPanel.add(trashButton, BorderLayout.EAST);
 //        northPanel.add(usernameField);
 //        northPanel.add(passwordField);
 //        northPanel.add(signUpButton);
@@ -182,7 +192,7 @@ public class GUI {
         centerPanel.setBackground(themeColor);
 
 
-        JScrollPane centerPanelScrollPane = new JScrollPane(mainList);
+        centerPanelScrollPane = new JScrollPane(mainList);
         centerPanelScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
         centerPanelScrollPane.setBorder(border);
         centerPanelScrollPane.getVerticalScrollBar().setUnitIncrement(16);
@@ -199,17 +209,58 @@ public class GUI {
             frame.add(gridBagLayout);
         } else {
             frame.add(northPanel, BorderLayout.NORTH);
-//            frame.add(centerPanelScrollPane, BorderLayout.CENTER);
-            frame.add(centerPanelScrollPane, BorderLayout.CENTER);
-            //show the other page
+            frame.add(centerPanelScrollPane, BorderLayout.CENTER);            //show the other page
         }
 
 
         frame.setPreferredSize(new Dimension(400, 400));
         frame.setSize(400, 400);
         frame.setVisible(true);
+        frame.validate();
         thread.start();
 
+    }
+
+    private static void loggedIn() {
+//        frame.removeAll();
+
+        frame.getContentPane().removeAll();
+//        frame.getContentPane().add(northPanel, BorderLayout.NORTH);
+//        frame.getContentPane().add(centerPanelScrollPane, BorderLayout.CENTER);
+        frame.add(northPanel, BorderLayout.NORTH);
+        frame.add(centerPanelScrollPane, BorderLayout.CENTER);
+        frame.validate();
+        frame.repaint();
+//        frame.repaint();
+    }
+
+//    protected static ImageIcon createImageIcon(String path) {
+//        java.net.URL imgURL = getResource(path);
+//        if (imgURL != null) {
+//            return new ImageIcon(imgURL);
+//        } else {
+//            System.err.println("Couldn't find file: " + path);
+//            return null;
+//        }
+//    }
+
+    private static JButton createButton() {
+        JButton button = new JButton("Delete", new ImageIcon(GUI.class.getClassLoader().getResource("trash.png")));
+//        ImageIcon icon = createImageIcon("/trash.png");
+
+//        button.setIcon(icon);
+        button.setOpaque(true);
+        button.setBorder(border);
+        button.setBackground(themeColor);
+        button.setForeground(Color.white);
+        button.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                System.out.println("Trash clicked");
+            }
+        });
+
+
+        return button;
     }
 
     private static boolean checkFirstTime() {
@@ -265,13 +316,35 @@ public class GUI {
         passwordLabel.setForeground(Color.white);
         passwordLabel.setDisplayedMnemonic('E');
         passwordLabel.setLabelFor(password);
-        JButton okButton = new JButton("OK");
-        okButton.setPreferredSize(new Dimension(100,
-                (int) okButton.getPreferredSize().getHeight()));
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setPreferredSize(new Dimension(100,
-                (int) cancelButton.getPreferredSize().getHeight()));
-
+        JButton okButton = new JButton("Sign up");
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    int code = serverHandler.signUp(email.getText(), password.getText());
+                    System.out.println("the code is: " + code);
+                    if(code == 200){
+                        System.out.println("signed in");
+                        loggedIn();
+                    }
+                } catch (JsonProcessingException jsonProcessingException) {
+                    jsonProcessingException.printStackTrace();
+                }
+            }
+        });
+        okButton.setPreferredSize(new Dimension(100, (int) okButton.getPreferredSize().getHeight()));
+        JButton cancelButton = new JButton("Log in");
+        cancelButton.setPreferredSize(new Dimension(100, (int) cancelButton.getPreferredSize().getHeight()));
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    serverHandler.logIn(email.getText(), password.getText());
+                } catch (JsonProcessingException jsonProcessingException) {
+                    jsonProcessingException.printStackTrace();
+                }
+            }
+        });
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(4, 10, 10, 10));
         panel.setBackground(themeColor);
