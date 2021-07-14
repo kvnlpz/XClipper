@@ -16,10 +16,10 @@ class ClipboardTextListener extends Observable implements Runnable {
     ClientManager clientManager;
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     DefaultListModel defaultListModel;
-    private volatile boolean running = true;
-    private Frame frame;
     JPanel mainList;
     Color themeColor;
+    private volatile boolean running = true;
+    private Frame frame;
 
     public ClipboardTextListener(JPanel mainList, JFrame frame, Color themeColor) throws NoSuchAlgorithmException {
         clientManager = new ClientManager();
@@ -59,11 +59,11 @@ class ClipboardTextListener extends Observable implements Runnable {
                         clientManager.encryptText(data);
                         setChanged();
                         notifyObservers(data);
-                        JPanel panel = createPanel();
-                        GridBagConstraints gbc = createGridBagConstraints();
-                        JTextArea textArea = createTextArea(data);
-                        final JPopupMenu popup = createPopupMenu();
-                        JButton button = createButton(popup);
+                        JPanel panel = ComponentHelper.createPanel();
+                        GridBagConstraints gbc = ComponentHelper.createGridBagConstraints();
+                        JTextArea textArea = ComponentHelper.createTextArea(data);
+                        final JPopupMenu popup = ComponentHelper.createPopupMenu();
+                        JButton button = ComponentHelper.createButton(popup);
                         panel.add(textArea, BorderLayout.CENTER);
                         panel.add(button, BorderLayout.EAST);
                         mainList.add(panel, gbc, 0);
@@ -79,75 +79,75 @@ class ClipboardTextListener extends Observable implements Runnable {
         }
     }
 
-    private JPopupMenu createPopupMenu() {
-        //Create the popup menu.
-        final JPopupMenu popup = new JPopupMenu();
-        popup.setBackground(themeColor);
-        JMenuItem deleteItem = new JMenuItem(new AbstractAction("Delete") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(frame, "Delete selected");
+//    private JPopupMenu createPopupMenu() {
+//        //Create the popup menu.
+//        final JPopupMenu popup = new JPopupMenu();
+//        popup.setBackground(themeColor);
+//        JMenuItem deleteItem = new JMenuItem(new AbstractAction("Delete") {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                JOptionPane.showMessageDialog(frame, "Delete selected");
+//
+//            }
+//        });
+//        deleteItem.setBackground(themeColor);
+//        deleteItem.setForeground(Color.white);
+//        popup.add(deleteItem);
+//        JMenuItem pinItem = new JMenuItem(new AbstractAction("Pin") {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                JOptionPane.showMessageDialog(frame, "Pin selected");
+//
+//            }
+//        });
+//        pinItem.setBackground(themeColor);
+//        pinItem.setForeground(Color.white);
+//        popup.add(pinItem);
+//
+//        return popup;
+//    }
 
-            }
-        });
-        deleteItem.setBackground(themeColor);
-        deleteItem.setForeground(Color.white);
-        popup.add(deleteItem);
-        JMenuItem pinItem = new JMenuItem(new AbstractAction("Pin") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(frame, "Pin selected");
+//    private GridBagConstraints createGridBagConstraints() {
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.gridwidth = GridBagConstraints.REMAINDER;
+//        gbc.weightx = 1;
+//        gbc.fill = GridBagConstraints.HORIZONTAL;
+//        gbc.insets = new Insets(3, 3, 3, 3);
+//        return gbc;
+//    }
 
-            }
-        });
-        pinItem.setBackground(themeColor);
-        pinItem.setForeground(Color.white);
-        popup.add(pinItem);
-
-        return popup;
-    }
-
-    private GridBagConstraints createGridBagConstraints() {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.weightx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(3, 3, 3, 3);
-        return gbc;
-    }
-
-    private JPanel createPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.setPreferredSize(new Dimension(200, 50));
-        panel.setBorder(new MatteBorder(0, 0, 1, 0, themeColor));
-        panel.setBackground(themeColor);
-        panel.setForeground(Color.white);
-        return panel;
-    }
-
-    private JTextArea createTextArea(String data) {
-        JTextArea textArea = new JTextArea(data);
-        textArea.setBackground(themeColor);
-        textArea.setForeground(Color.white);
-        textArea.setLineWrap(true);
-        textArea.setEditable(false);
-        return textArea;
-    }
-
-    private JButton createButton(JPopupMenu popup) {
-
-        JButton button = new JButton("...");
-        button.setOpaque(true);
-        button.setBackground(new Color(55, 62, 65));
-        button.setForeground(Color.white);
-        button.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                popup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-
-
-        return button;
-    }
+//    private JPanel createPanel() {
+//        JPanel panel = new JPanel();
+//        panel.setLayout(new BorderLayout());
+//        panel.setPreferredSize(new Dimension(200, 50));
+//        panel.setBorder(new MatteBorder(0, 0, 1, 0, themeColor));
+//        panel.setBackground(themeColor);
+//        panel.setForeground(Color.white);
+//        return panel;
+//    }
+//
+//    private JTextArea createTextArea(String data) {
+//        JTextArea textArea = new JTextArea(data);
+//        textArea.setBackground(themeColor);
+//        textArea.setForeground(Color.white);
+//        textArea.setLineWrap(true);
+//        textArea.setEditable(false);
+//        return textArea;
+//    }
+//
+//    private JButton createButton(JPopupMenu popup) {
+//
+//        JButton button = new JButton("...");
+//        button.setOpaque(true);
+//        button.setBackground(new Color(55, 62, 65));
+//        button.setForeground(Color.white);
+//        button.addMouseListener(new MouseAdapter() {
+//            public void mousePressed(MouseEvent e) {
+//                popup.show(e.getComponent(), e.getX(), e.getY());
+//            }
+//        });
+//
+//
+//        return button;
+//    }
 }

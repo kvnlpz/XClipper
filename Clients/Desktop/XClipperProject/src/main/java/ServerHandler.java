@@ -2,16 +2,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.socket.client.IO;
 import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 import io.socket.engineio.client.transports.Polling;
 import io.socket.engineio.client.transports.WebSocket;
 
 import javax.swing.*;
-import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -19,19 +16,30 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 
-import static io.socket.client.IO.socket;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
+
+
+
+
+
+
+
+/*
+refresh - SERVER SENDS TO CLIENT every 10 seconds. Gets all the clips that exists for the user and sends it to the client
+sendNewClip - CLIENT SENDS TO SERVER when a new clip is added.
+recieveNewClip - SERVER SENDS TO CLIENT when a new clip is added. (sends to other clients to notify that a new clip is sent)
+clipSaveStatus - SERVER SENDS TO CLIENT to notify the client that the clip was saved successfully or failed
+requestRefresh - CLIENT SENDS TO SERVER to notify the server that the clients wants a full clip refresh for their client
+
+ */
 public class ServerHandler {
     String cookieString = "";
     ClientManager clientManager;
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     DefaultListModel defaultListModel;
-    private volatile boolean running = true;
-    private Frame frame;
     JPanel mainList;
     Color themeColor;
     IO.Options options;
@@ -43,6 +51,8 @@ public class ServerHandler {
             "http://localhost:3000/signup"
     };
     CookieManager cm;
+    private volatile boolean running = true;
+    private Frame frame;
 
 //    java.net.CookieHandler.setDefault();
 
@@ -68,9 +78,6 @@ public class ServerHandler {
 //                });
 
 
-
-
-
 //        try {
 //            System.out.println("Connecting to server ");
 //            serverSocket = new ServerSocket(9000, 0, InetAddress.getLoopbackAddress());
@@ -86,13 +93,86 @@ public class ServerHandler {
 //        cook.put("cookie", cookieString);
 
         System.out.println("creating options object");
-        options = IO.Options.builder()
+        options = createOptions();
+
+        try {
+            System.out.println("inside the try block");
+            InetAddress addr = InetAddress.getByName(hostname);
+
+//            IO.socket(URI.create(endpoints[0]), options);
+            socket = IO.socket(URI.create(URL), options); // the main namespace
+            socket.connect();
+            addSocketEventListeners(socket);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private void addSocketEventListeners(Socket socket) {
+
+        //requestRefresh - CLIENT SENDS TO SERVER to notify the server that the clients wants a full clip refresh for their client
+        socket.emit("requestRefresh");
+        socket.on("recieveNewClip", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
+                String text = (String) args[0];
+                JPanel panel = ComponentHelper.createPanel();
+                JTextArea textArea = ComponentHelper.createTextArea(text);
+                GridBagConstraints gbc = ComponentHelper.createGridBagConstraints();
+//                    JPanel panel = createPanel();
+//                    GridBagConstraints gbc = createGridBagConstraints();
+//                    JTextArea textArea = createTextArea(data);
+                final JPopupMenu popup = ComponentHelper.createPopupMenu();
+                JButton button = ComponentHelper.createButton(popup);
+                panel.add(textArea, BorderLayout.CENTER);
+                panel.add(button, BorderLayout.EAST);
+                GUI.mainList.add(panel, gbc, 0);
+//                    GUI.serverHandler.uploadText(data);
+
+                GUI.frame.validate();
+                GUI.frame.repaint();
+            }
+        });
+        socket.on("refresh", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                System.out.println("THIS IS THE REFRESH FUNCTION");
+                System.out.println(args[0]);
+//                    String[] s = (String[]) args[0];
+//                    System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
+//                    String text = (String) args[0];
+//                    JPanel panel = createPanel();
+//                    JTextArea textArea = createTextArea(text);
+//                    GridBagConstraints gbc = createGridBagConstraints();
+//                    JPanel panel = createPanel();
+//                    GridBagConstraints gbc = createGridBagConstraints();
+//                    JTextArea textArea = createTextArea(data);
+//                    final JPopupMenu popup = createPopupMenu();
+//                    JButton button = createButton(popup);
+//                    panel.add(textArea, BorderLayout.CENTER);
+//                    panel.add(button, BorderLayout.EAST);
+//                    GUI.mainList.add(panel, gbc, 0);
+//                    GUI.serverHandler.uploadText(data);
+//
+//                    GUI.frame.validate();
+//                    GUI.frame.repaint();
+            }
+        });
+    }
+
+    private IO.Options createOptions() {
+        return IO.Options.builder()
                 // IO factory options
                 .setForceNew(false)
                 .setMultiplex(true)
 
                 // low-level engine options
-                .setTransports(new String[] { Polling.NAME, WebSocket.NAME })
+                .setTransports(new String[]{Polling.NAME, WebSocket.NAME})
                 .setUpgrade(true)
                 .setRememberUpgrade(false)
 //                .setPath("/socket.io/")
@@ -111,126 +191,30 @@ public class ServerHandler {
                 // Socket options
                 .setAuth(null)
                 .build();
-
-        try {
-            System.out.println("inside the try block");
-            InetAddress addr = InetAddress.getByName(hostname);
-
-//            IO.socket(URI.create(endpoints[0]), options);
-            socket = IO.socket(URI.create("http://localhost:3000"), options); // the main namespace
-            socket.connect();
-
-//            socket.on("recieveNewClip", new Emitter.Listener() {
-//                @Override
-//                public void call(Object... args) {
-//                    String text = (String) args[0];
-//                    JPanel panel = createPanel();
-//                    JTextArea textArea = createTextArea(text);
-//                    GridBagConstraints gbc = createGridBagConstraints();
-//                    JTextArea textArea = createTextArea(data);
-//                    final JPopupMenu popup = createPopupMenu();
-//                    JButton button = createButton(popup);
-//                    panel.add(textArea, BorderLayout.CENTER);
-//                    panel.add(button, BorderLayout.EAST);
-//                    mainList.add(panel, gbc, 0);
-//                    frame.validate();
-//                    frame.repaint();
-//                }
-//            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-
     }
 
 
-
-    public void uploadText(String text){
+    public void uploadText(String text) {
         System.out.println("uploading text");
         socket.emit("sendNewClip", text);
-    }
-    private JPopupMenu createPopupMenu() {
-        //Create the popup menu.
-        final JPopupMenu popup = new JPopupMenu();
-        popup.setBackground(GUI.themeColor);
-        JMenuItem deleteItem = new JMenuItem(new AbstractAction("Delete") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(GUI.frame, "Delete selected");
-
-            }
-        });
-        deleteItem.setBackground(GUI.themeColor);
-        deleteItem.setForeground(Color.white);
-        popup.add(deleteItem);
-        JMenuItem pinItem = new JMenuItem(new AbstractAction("Pin") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(GUI.frame, "Pin selected");
-
-            }
-        });
-        pinItem.setBackground(themeColor);
-        pinItem.setForeground(Color.white);
-        popup.add(pinItem);
-
-        return popup;
-    }
-
-    private GridBagConstraints createGridBagConstraints() {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.weightx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(3, 3, 3, 3);
-        return gbc;
+        //clipSaveStatus - SERVER SENDS TO CLIENT to notify the client that the clip was saved successfully or failed
+//        socket.on("clipSaveStatus", new Emitter.Listener() {
+//            @Override
+//            public void call(Object... args) {
+//                System.out.println("THIS IS THE REFRESH FUNCTION");
+//                System.out.println(args[0]);
+//            }
+//        });
     }
 
 
-    private JButton createButton(JPopupMenu popup) {
-
-        JButton button = new JButton("...");
-        button.setOpaque(true);
-        button.setBackground(new Color(55, 62, 65));
-        button.setForeground(Color.white);
-        button.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                popup.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-
-
-        return button;
-    }
-
-
-    private JTextArea createTextArea(String data) {
-        JTextArea textArea = new JTextArea(data);
-        textArea.setBackground(GUI.themeColor);
-        textArea.setForeground(Color.white);
-        textArea.setLineWrap(true);
-        textArea.setEditable(false);
-        return textArea;
-    }
-     private JPanel createPanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.setPreferredSize(new Dimension(200, 50));
-        panel.setBorder(new MatteBorder(0, 0, 1, 0, GUI.themeColor));
-        panel.setBackground(GUI.themeColor);
-        panel.setForeground(Color.white);
-        return panel;
-    }
-
-
-    public void logIn(String username, String password) throws JsonProcessingException {
-        System.out.println("logging in");
-//        String email = password + "@lol.com";
+    public int logIn(String username, String password) throws JsonProcessingException {
+        final int[] responseCode = {0};
+        System.out.println("logging up");
+        String email = password + "@lol.com";
         HashMap<String, String> map = new HashMap<>();
         map.put("username", username);
+        map.put("email", email);
         map.put("password", password);
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -238,34 +222,66 @@ public class ServerHandler {
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(map);
 
+        cm = new CookieManager();
+        cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
-        CompletableFuture.runAsync(() -> {
-            CookieManager cm = new CookieManager();
-            HttpRequest request = HttpRequest.newBuilder(URI.create(endpoints[0]))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                    .build();
+        System.out.println("making request");
+        HttpRequest request = HttpRequest.newBuilder(URI.create(endpoints[0]))
+                .header("Content-Type", "application/json")
+//                    .headers("Content-Type", "application/json", "")
 
-            HttpClient httpClient = HttpClient.newBuilder()
-                    .version(HttpClient.Version.HTTP_1_1)
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .connectTimeout(Duration.ofSeconds(20))
-                    .cookieHandler(cm)
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build();
+
+        System.out.println("making client");
+        HttpClient httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofSeconds(20))
+                .cookieHandler(cm)
 //                .authenticator(Authenticator.getDefault())
-                    .build();
+                .build();
 
-            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(HttpResponse::statusCode)
-                    .thenAccept(System.out::println);
+//            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+//                    .thenApply(HttpResponse::statusCode)
+//                    .thenAccept(System.out::println);
 
-        });
 
-//        CompletableFuture.runAsync(() -> {
-//             get Cookies
+        System.out.println("trying to get response");
+        HttpResponse<String> response = null;
+        try {
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+            System.out.println(response.body());
+            if (response != null) {
+                responseCode[0] = response.statusCode();
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+//httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+//                    .thenApply(HttpResponse::statusCode)
+//                    .thenAccept(System.out::println);
+
+
+        cm.getCookieStore().getCookies().forEach(System.out::println);
+        cookieString = cm.getCookieStore().getCookies().get(0).toString();
+        System.out.println(cookieString);
+
 //            System.out.println("Here are the cookies: ");
 //            System.out.println(cm.getCookieStore().getCookies().toString());
-//        });
+//            System.out.println(            cm.getCookieStore().getCookies().size());
 
+
+//        CompletableFuture.runAsync(()->{
+//            System.out.println(CookieHandler.getDefault().g;
+//        });
+//        CompletableFuture.supplyAsync(()->         CookieHandler.getDefault().toString());
+        System.out.println("trying to connect to server");
+        connectToServer();
+        return responseCode[0];
     }
 
     public int signUp(String username, String password) throws JsonProcessingException {
@@ -313,7 +329,7 @@ public class ServerHandler {
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
             System.out.println(response.body());
-            if(response != null){
+            if (response != null) {
                 responseCode[0] = response.statusCode();
             }
         } catch (IOException | InterruptedException e) {
@@ -326,8 +342,6 @@ public class ServerHandler {
 //                    .thenAccept(System.out::println);
 
 
-
-
         cm.getCookieStore().getCookies().forEach(System.out::println);
         cookieString = cm.getCookieStore().getCookies().get(0).toString();
         System.out.println(cookieString);
@@ -335,7 +349,6 @@ public class ServerHandler {
 //            System.out.println("Here are the cookies: ");
 //            System.out.println(cm.getCookieStore().getCookies().toString());
 //            System.out.println(            cm.getCookieStore().getCookies().size());
-
 
 
 //        CompletableFuture.runAsync(()->{

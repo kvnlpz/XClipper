@@ -1,31 +1,43 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.FlavorEvent;
 import java.awt.datatransfer.FlavorListener;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 import java.util.prefs.Preferences;
 
 public class GUI {
     static JList centerPanel;
     static DefaultListModel defaultListModel;
     static Color themeColor = new Color(55, 62, 65);
-    static private JPanel mainList;
+    static public JPanel mainList;
     static EmptyBorder border;
     static ServerHandler serverHandler;
     static  JFrame frame;
     static JPanel northPanel;
     static JScrollPane centerPanelScrollPane;
-    public static void main(String[] args) throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException, NoSuchAlgorithmException {
+    static Path currentRelativePath = Paths.get("");
+    static String s = currentRelativePath.toAbsolutePath().toString();
+    static String path = s + File.separator + "run.txt";
+    static File f = new File(path);
+    //    String[] credentials = new String[3];
+    static List<String> credentials = new ArrayList<>();
+
+
+    public static void main(String[] args) throws NoSuchAlgorithmException {
         int width = 600, height = 400;
 //        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         Preferences prefs = Preferences.userNodeForPackage(GUI.class);
@@ -33,12 +45,7 @@ public class GUI {
         String defaultValue = "false";
         String propertyValue = prefs.get(PREF_NAME, defaultValue);
         String programText = "";
-        if (propertyValue.equals("false")) {
-            programText = "the program is set to open up normally";
-
-        } else {
-            programText = "The program is set to open up minimized";
-        }
+        f.getParentFile().mkdirs();
 
 
         System.out.println();
@@ -175,7 +182,7 @@ public class GUI {
 //            }
 //        });
 
-        JButton trashButton = createButton();
+        JButton trashButton = ComponentHelper.createButton("trash");
         northPanel.add(titleLabel, BorderLayout.WEST);
         northPanel.add(trashButton, BorderLayout.EAST);
 //        northPanel.add(usernameField);
@@ -244,36 +251,34 @@ public class GUI {
 //        }
 //    }
 
-    private static JButton createButton() {
-        JButton button = new JButton("Delete", new ImageIcon(GUI.class.getClassLoader().getResource("trash.png")));
-//        ImageIcon icon = createImageIcon("/trash.png");
-
-//        button.setIcon(icon);
-        button.setOpaque(true);
-        button.setBorder(border);
-        button.setBackground(themeColor);
-        button.setForeground(Color.white);
-        button.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                System.out.println("Trash clicked");
-            }
-        });
-
-
-        return button;
-    }
-
+    //    private static JButton createButton() {
+//        JButton button = new JButton("Delete", new ImageIcon(GUI.class.getClassLoader().getResource("trash.png")));
+////        ImageIcon icon = createImageIcon("/trash.png");
+//
+////        button.setIcon(icon);
+//        button.setOpaque(true);
+//        button.setBorder(border);
+//        button.setBackground(themeColor);
+//        button.setForeground(Color.white);
+//        button.addMouseListener(new MouseAdapter() {
+//            public void mousePressed(MouseEvent e) {
+//                System.out.println("Trash clicked");
+//            }
+//        });
+//
+//
+//        return button;
+//    }
+//
     private static boolean checkFirstTime() {
         //we check if it's the first time running the program by checking if a file exists in the path
-        Path currentRelativePath = Paths.get("");
-        String s = currentRelativePath.toAbsolutePath().toString();
-        System.out.println("Current absolute path is: " + s);
+//        Path currentRelativePath = Paths.get("");
 
-        String path = s + File.separator + "run.txt";
+
+        //        System.out.println("Current absolute path is: " + s);
+
         // Use relative path for Unix systems
-        File f = new File(path);
 
-        f.getParentFile().mkdirs();
 
 
         if (!f.exists()) {
@@ -286,8 +291,34 @@ public class GUI {
             }
         } else {
             System.out.println("File exists, so program has been run before.");
+            checkFile(f);
         }
         return false;
+    }
+
+    private static void checkFile(File f) {
+        StringBuilder fileContents = new StringBuilder((int)f.length());
+        try (Scanner scanner = new Scanner(f)) {
+            credentials.add(scanner.next());
+            while(scanner.hasNextLine()) {
+                fileContents.append(scanner.nextLine() + System.lineSeparator());
+                credentials.add(scanner.nextLine());
+            }
+//            return fileContents.toString();
+            try {
+                int code = serverHandler.logIn(credentials.get(0), credentials.get(1));
+                System.out.println("the code is: " + code);
+                if (code == 200) {
+                    System.out.println("logged in");
+                    loggedIn();
+                }
+            } catch (JsonProcessingException jsonProcessingException) {
+                jsonProcessingException.printStackTrace();
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void startEventListener() {
@@ -323,8 +354,9 @@ public class GUI {
                 try {
                     int code = serverHandler.signUp(email.getText(), password.getText());
                     System.out.println("the code is: " + code);
-                    if(code == 200){
-                        System.out.println("signed in");
+                    if (code == 200) {
+                        System.out.println("signed up");
+                        saveCredentials(email.getText(), password.getText());
                         loggedIn();
                     }
                 } catch (JsonProcessingException jsonProcessingException) {
@@ -339,7 +371,13 @@ public class GUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    serverHandler.logIn(email.getText(), password.getText());
+                    int code = serverHandler.logIn(email.getText(), password.getText());
+                    System.out.println("the code is: " + code);
+                    if (code == 200) {
+                        System.out.println("logged in");
+                        saveCredentials(email.getText(), password.getText());
+                        loggedIn();
+                    }
                 } catch (JsonProcessingException jsonProcessingException) {
                     jsonProcessingException.printStackTrace();
                 }
@@ -394,6 +432,20 @@ public class GUI {
         return panel;
     }
 
+    private static void saveCredentials(String text, String passwordText) {
+        System.out.println("Saving Credentials");
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(f);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        writer.write(text + "\n");
+        writer.write(passwordText + "\n");
+        writer.close();
+
+    }
+
 
 }
-
