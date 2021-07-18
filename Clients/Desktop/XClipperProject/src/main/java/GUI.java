@@ -1,5 +1,4 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -54,25 +53,19 @@ public class GUI {
 
 
         defaultListModel = new DefaultListModel();
-
         mainList = new JPanel(new GridBagLayout());
         mainList.setBackground(themeColor);
         serverHandler = new ServerHandler();
 
 
-       frame = new JFrame("XClipper");
+        frame = new JFrame("XClipper");
         ClipboardTextListener clipboardTextListener = new ClipboardTextListener(mainList, frame, themeColor);
         Thread thread = new Thread(clipboardTextListener);
         frame.setBackground(themeColor);
         frame.setLayout(new BorderLayout());
 
 
-        northPanel = new JPanel(new BorderLayout());
-        northPanel.setBackground(themeColor);
-        northPanel.setPreferredSize(new Dimension(400, 50));
-        border = new EmptyBorder(0, 0, 0, 0);
-        northPanel.setBorder(border);
-
+        createNorthPanel();
 
 
         JLabel titleLabel = new JLabel("Clipboard History");
@@ -191,18 +184,10 @@ public class GUI {
 //        northPanel.add(loginButton);
 
 
-        centerPanel = new JList(defaultListModel);
-        centerPanel.setForeground(Color.white);
-        centerPanel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        centerPanel.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        centerPanel.setVisibleRowCount(-1);
-        centerPanel.setBackground(themeColor);
+        createCenterPanel();
 
 
-        centerPanelScrollPane = new JScrollPane(mainList);
-        centerPanelScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-        centerPanelScrollPane.setBorder(border);
-        centerPanelScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        createCenterPanelScrollPane();
 
 //        centerPanelScrollPane.setPreferredSize(new Dimension(300, 80));
 //
@@ -226,6 +211,30 @@ public class GUI {
         frame.validate();
         thread.start();
 
+    }
+
+    private static void createNorthPanel() {
+        northPanel = new JPanel(new BorderLayout());
+        northPanel.setBackground(themeColor);
+        northPanel.setPreferredSize(new Dimension(400, 50));
+        border = new EmptyBorder(0, 0, 0, 0);
+        northPanel.setBorder(border);
+    }
+
+    private static void createCenterPanelScrollPane() {
+        centerPanelScrollPane = new JScrollPane(mainList);
+        centerPanelScrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+        centerPanelScrollPane.setBorder(border);
+        centerPanelScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+    }
+
+    private static void createCenterPanel() {
+        centerPanel = new JList(defaultListModel);
+        centerPanel.setForeground(Color.white);
+        centerPanel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        centerPanel.setLayoutOrientation(JList.HORIZONTAL_WRAP);
+        centerPanel.setVisibleRowCount(-1);
+        centerPanel.setBackground(themeColor);
     }
 
     private static void loggedIn() {

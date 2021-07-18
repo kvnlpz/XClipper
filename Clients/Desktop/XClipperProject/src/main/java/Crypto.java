@@ -7,8 +7,10 @@
  */
 
 
-
-
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.Destroyable;
 import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -16,11 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.Destroyable;
 
 public class Crypto {
 
