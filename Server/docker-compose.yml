@@ -1,0 +1,15 @@
+version: '3'
+services:
+    mongodb:
+        image: 'mongo:latest'
+        restart: 'always'
+        volumes:
+            - ./database:/data/db
+    
+    xclipper:
+        build: .
+        restart: 'always'
+        ports:
+            - '3000:3000'
+        links:
+            - mongodb
