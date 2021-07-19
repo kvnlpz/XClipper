@@ -26,35 +26,76 @@ module.exports = (io, sessionMiddleware) => {
         socket.join(username);
 
         // Emit event that gives all the clips assosciated with the username every 1 min
-        const userClips = await Clip.find({username: username});
-        socket.emit('refresh', userClips);
-        
-        setInterval(async () => {
+        try {
             const userClips = await Clip.find({username: username});
             socket.emit('refresh', userClips);
+        } catch (error) {
+            socket.emit('refresh', null);
+        }
+        
+        setInterval(async () => {
+            try {
+                const userClips = await Clip.find({username: username});
+                socket.emit('refresh', userClips);
+            } catch (error) {
+                socket.emit('refresh', null);
+            }
         }, 10000);
 
         // Event when the client requests a refresh
         socket.on('requestRefresh', async () => {
-            const userClips = await Clip.find({username: username});
-            socket.emit('refresh', userClips);
+            try {
+                const userClips = await Clip.find({username: username});
+                socket.emit('refresh', userClips);
+            } catch (error) {
+                socket.emit('refresh', null);
+            }
         });
 
         // Event when a socket client sends new clip
         socket.on('sendNewClip', async (clip) => {
-            const sanitizeClip = xss(clip);
+            try {
+                const sanitizeClip = xss(clip);
 
-            console.log(sanitizeClip);
-            
-            // Emit to others in the room that a new clip has arrived
-            socket.to(username).emit('receiveNewClip', sanitizeClip);
+                console.log(sanitizeClip);
+                
+                // Emit to others in the room that a new clip has arrived
+                socket.to(username).emit('receiveNewClip', sanitizeClip);
 
-            // Add clip to the database
-            const newClip = new Clip({username: username, clip: sanitizeClip});
-            await newClip.save();
+                // Add clip to the database
+                const newClip = new Clip({username: username, clip: sanitizeClip});
 
-            // Emit to sender that the clip was sent successfully
-            socket.emit('clipSavedStatus', 'success');
+                await newClip.save();
+
+                // Emit to sender that the clip was sent successfully
+                socket.emit('clipSavedStatus', newClip._id);
+
+            } catch (error) {
+                console.log(error);
+                socket.emit('clipSaved Status', null);
+            }
+        });
+
+        socket.on('deleteOneClip', async (clip_id) => {
+            try {
+                await Clip.deleteOne({username: username, _id: clip_id});
+                socket.emit('deleteOneClipStatus', clip_id);
+
+            } catch (error) {
+                console.log(error);
+                socket.emit('deleteOneClipStatus', null);
+            }
+        });
+
+        socket.on('deleteAllClips', async () => {
+            try {
+                await Clip.deleteMany({username: username});
+                socket.emit('deleteAllClipsStatus', 'success');
+
+            } catch (error) {
+                console.log(error);
+                socket.emit('deleteAllClipsStatus', null);
+            }
         });
     });
 };
