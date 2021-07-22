@@ -44,54 +44,47 @@ public class ServerHandler {
             "http://localhost:3000/login",
             "http://localhost:3000/signup"
     };
+
+    //Cookies need to be stored and managed
     CookieManager cm;
+
     private volatile boolean running = true;
     private Frame frame;
 
-
+    //Basic Constructor
     public ServerHandler() {
-
         this.mainList = mainList;
         this.frame = frame;
         this.themeColor = themeColor;
-
-
         CookieHandler.setDefault(new CookieManager());
-
-
     }
 
+    //after the log in succeeds, we connect to the server
     public void connectToServer() {
         String hostname = "localhost";
         int port = 3000;
-
         System.out.println("creating options object");
+        //SocketIO options
         options = createOptions();
 
         try {
             System.out.println("inside the try block");
             InetAddress addr = InetAddress.getByName(hostname);
-
             socket = IO.socket(URI.create(URL), options);
             socket.connect();
             addSocketEventListeners(socket);
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private void addSocketEventListeners(Socket socket) {
-
         //requestRefresh - CLIENT SENDS TO SERVER to notify the server that the clients wants a full clip refresh for their client
         socket.emit("requestRefresh");
         socket.on("recieveNewClip", new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-                System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
+                System.out.println("COPY GOT A TEXT GOT A TEXT!!");
                 String text = (String) args[0];
                 JPanel panel = ComponentHelper.createPanel();
                 JTextArea textArea = ComponentHelper.createTextArea(text);
@@ -126,7 +119,7 @@ public class ServerHandler {
                 .setTransports(new String[]{Polling.NAME, WebSocket.NAME})
                 .setUpgrade(true)
                 .setRememberUpgrade(false)
-//                .setPath("/socket.io/")
+                // .setPath("/socket.io/")
                 .setQuery(null)
                 .setExtraHeaders(singletonMap("cookie", singletonList(cookieString)))
 
@@ -138,13 +131,13 @@ public class ServerHandler {
                 .setRandomizationFactor(0.5)
                 .setTimeout(20_000)
 
-
                 // Socket options
                 .setAuth(null)
                 .build();
     }
 
 
+    //my function for uploading new clips
     public void uploadText(String text) {
         System.out.println("uploading text");
         socket.emit("sendNewClip", text);
@@ -152,27 +145,33 @@ public class ServerHandler {
     }
 
 
+    //method for logging into the server
     public int logIn(String username, String password) throws JsonProcessingException {
         final int[] responseCode = {0};
         System.out.println("logging in");
+        //"hardcoded" values for now, TODO() I need to replace this part
         String email = password + "@lol.com";
+        //added a map with the credentials
         HashMap<String, String> map = new HashMap<>();
         map.put("username", username);
         map.put("email", email);
         map.put("password", password);
 
+        //from the jackson library for JSOn
         ObjectMapper objectMapper = new ObjectMapper();
+        //our request body will be made using the map and converted to JSON
         String requestBody = objectMapper
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(map);
 
+        //our cookie manager initialization
         cm = new CookieManager();
+        //set to accept all cookies because it would not get any without it somehow
         cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 
         System.out.println("making request");
         HttpRequest request = HttpRequest.newBuilder(URI.create(endpoints[0]))
                 .header("Content-Type", "application/json")
-
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
 
@@ -200,16 +199,18 @@ public class ServerHandler {
         }
 
 
+        //printing out the cookies just to make sure I received any
         cm.getCookieStore().getCookies().forEach(System.out::println);
+        //same thing here really
         cookieString = cm.getCookieStore().getCookies().get(0).toString();
         System.out.println(cookieString);
-
-
         System.out.println("trying to connect to server");
+        //try and connect to the server right after we log in
         connectToServer();
         return responseCode[0];
     }
 
+    //no comments here because it is basically a clone of logIn()
     public int signUp(String username, String password) throws JsonProcessingException {
         final int[] responseCode = {0};
         System.out.println("signing up");
