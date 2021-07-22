@@ -14,7 +14,6 @@ import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-//import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.HashMap;
 
@@ -49,8 +48,6 @@ public class ServerHandler {
     private volatile boolean running = true;
     private Frame frame;
 
-//    java.net.CookieHandler.setDefault();
-
 
     public ServerHandler() {
 
@@ -60,32 +57,13 @@ public class ServerHandler {
 
 
         CookieHandler.setDefault(new CookieManager());
-//        URI uri = URI.create(endpoints[0]);
-//        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
-//                new javax.net.ssl.HostnameVerifier(){
-//
-//                    public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
-//                        if (hostname.equals("localhost:3000")) {
-//                            return true;
-//                        }
-//                        return false;
-//                    }
-//                });
 
 
-//        try {
-//            System.out.println("Connecting to server ");
-//            serverSocket = new ServerSocket(9000, 0, InetAddress.getLoopbackAddress());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
     public void connectToServer() {
         String hostname = "localhost";
         int port = 3000;
-//        Map<String, String> cook = new HashMap<>();
-//        cook.put("cookie", cookieString);
 
         System.out.println("creating options object");
         options = createOptions();
@@ -94,8 +72,7 @@ public class ServerHandler {
             System.out.println("inside the try block");
             InetAddress addr = InetAddress.getByName(hostname);
 
-//            IO.socket(URI.create(endpoints[0]), options);
-            socket = IO.socket(URI.create(URL), options); // the main namespace
+            socket = IO.socket(URI.create(URL), options);
             socket.connect();
             addSocketEventListeners(socket);
 
@@ -119,15 +96,12 @@ public class ServerHandler {
                 JPanel panel = ComponentHelper.createPanel();
                 JTextArea textArea = ComponentHelper.createTextArea(text);
                 GridBagConstraints gbc = ComponentHelper.createGridBagConstraints();
-//                    JPanel panel = createPanel();
-//                    GridBagConstraints gbc = createGridBagConstraints();
-//                    JTextArea textArea = createTextArea(data);
                 final JPopupMenu popup = ComponentHelper.createPopupMenu();
                 JButton button = ComponentHelper.createButton(popup);
                 panel.add(textArea, BorderLayout.CENTER);
                 panel.add(button, BorderLayout.EAST);
+                ComponentHelper.addTitledBorder(panel, GUI.borderWhite, "Clip", Color.GREEN);
                 GUI.mainList.add(panel, gbc, 0);
-//                    GUI.serverHandler.uploadText(data);
 
                 GUI.frame.validate();
                 GUI.frame.repaint();
@@ -138,24 +112,6 @@ public class ServerHandler {
             public void call(Object... args) {
                 System.out.println("THIS IS THE REFRESH FUNCTION");
                 System.out.println(args[0]);
-//                    String[] s = (String[]) args[0];
-//                    System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
-//                    String text = (String) args[0];
-//                    JPanel panel = createPanel();
-//                    JTextArea textArea = createTextArea(text);
-//                    GridBagConstraints gbc = createGridBagConstraints();
-//                    JPanel panel = createPanel();
-//                    GridBagConstraints gbc = createGridBagConstraints();
-//                    JTextArea textArea = createTextArea(data);
-//                    final JPopupMenu popup = createPopupMenu();
-//                    JButton button = createButton(popup);
-//                    panel.add(textArea, BorderLayout.CENTER);
-//                    panel.add(button, BorderLayout.EAST);
-//                    GUI.mainList.add(panel, gbc, 0);
-//                    GUI.serverHandler.uploadText(data);
-//
-//                    GUI.frame.validate();
-//                    GUI.frame.repaint();
             }
         });
     }
@@ -193,19 +149,12 @@ public class ServerHandler {
         System.out.println("uploading text");
         socket.emit("sendNewClip", text);
         //clipSaveStatus - SERVER SENDS TO CLIENT to notify the client that the clip was saved successfully or failed
-//        socket.on("clipSaveStatus", new Emitter.Listener() {
-//            @Override
-//            public void call(Object... args) {
-//                System.out.println("THIS IS THE REFRESH FUNCTION");
-//                System.out.println(args[0]);
-//            }
-//        });
     }
 
 
     public int logIn(String username, String password) throws JsonProcessingException {
         final int[] responseCode = {0};
-        System.out.println("logging up");
+        System.out.println("logging in");
         String email = password + "@lol.com";
         HashMap<String, String> map = new HashMap<>();
         map.put("username", username);
@@ -223,7 +172,6 @@ public class ServerHandler {
         System.out.println("making request");
         HttpRequest request = HttpRequest.newBuilder(URI.create(endpoints[0]))
                 .header("Content-Type", "application/json")
-//                    .headers("Content-Type", "application/json", "")
 
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
@@ -236,10 +184,6 @@ public class ServerHandler {
                 .cookieHandler(cm)
 //                .authenticator(Authenticator.getDefault())
                 .build();
-
-//            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//                    .thenApply(HttpResponse::statusCode)
-//                    .thenAccept(System.out::println);
 
 
         System.out.println("trying to get response");
@@ -256,24 +200,11 @@ public class ServerHandler {
         }
 
 
-//httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//                    .thenApply(HttpResponse::statusCode)
-//                    .thenAccept(System.out::println);
-
-
         cm.getCookieStore().getCookies().forEach(System.out::println);
         cookieString = cm.getCookieStore().getCookies().get(0).toString();
         System.out.println(cookieString);
 
-//            System.out.println("Here are the cookies: ");
-//            System.out.println(cm.getCookieStore().getCookies().toString());
-//            System.out.println(            cm.getCookieStore().getCookies().size());
 
-
-//        CompletableFuture.runAsync(()->{
-//            System.out.println(CookieHandler.getDefault().g;
-//        });
-//        CompletableFuture.supplyAsync(()->         CookieHandler.getDefault().toString());
         System.out.println("trying to connect to server");
         connectToServer();
         return responseCode[0];
@@ -288,6 +219,7 @@ public class ServerHandler {
         map.put("email", email);
         map.put("password", password);
 
+
         ObjectMapper objectMapper = new ObjectMapper();
         String requestBody = objectMapper
                 .writerWithDefaultPrettyPrinter()
@@ -299,7 +231,6 @@ public class ServerHandler {
         System.out.println("making request");
         HttpRequest request = HttpRequest.newBuilder(URI.create(endpoints[1]))
                 .header("Content-Type", "application/json")
-//                    .headers("Content-Type", "application/json", "")
 
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
@@ -313,14 +244,11 @@ public class ServerHandler {
 //                .authenticator(Authenticator.getDefault())
                 .build();
 
-//            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//                    .thenApply(HttpResponse::statusCode)
-//                    .thenAccept(System.out::println);
-
 
         System.out.println("trying to get response");
         HttpResponse<String> response = null;
         try {
+
             response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
             System.out.println(response.body());
@@ -332,24 +260,11 @@ public class ServerHandler {
         }
 
 
-//httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-//                    .thenApply(HttpResponse::statusCode)
-//                    .thenAccept(System.out::println);
-
-
         cm.getCookieStore().getCookies().forEach(System.out::println);
         cookieString = cm.getCookieStore().getCookies().get(0).toString();
         System.out.println(cookieString);
 
-//            System.out.println("Here are the cookies: ");
-//            System.out.println(cm.getCookieStore().getCookies().toString());
-//            System.out.println(            cm.getCookieStore().getCookies().size());
 
-
-//        CompletableFuture.runAsync(()->{
-//            System.out.println(CookieHandler.getDefault().g;
-//        });
-//        CompletableFuture.supplyAsync(()->         CookieHandler.getDefault().toString());
         System.out.println("trying to connect to server");
         connectToServer();
         return responseCode[0];

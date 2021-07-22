@@ -1,18 +1,23 @@
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/*
+THIS FILE IS ONLY FOR MY GUI, USED TO HELP ME SIMPLIFY THE CODE BY REMOVING BOILERPLATE CODE AND USING A CLASS
+FOR THE GENERATION OF UI COMPONENTS
+ */
 public class ComponentHelper {
     static JList centerPanel;
     static DefaultListModel defaultListModel;
     static Color themeColor = new Color(55, 62, 65);
-    //MAKE THIS PRIVATE AGAIN
+    //TODO() MAKE THIS PRIVATE AGAIN
     static public JPanel mainList;
-
     static EmptyBorder border;
     static ServerHandler serverHandler;
     static JFrame frame;
@@ -24,7 +29,7 @@ public class ComponentHelper {
         JButton button = new JButton(title, new ImageIcon(GUI.class.getClassLoader().getResource("trash.png")));
         button.setOpaque(true);
         button.setBorder(border);
-        button.setBackground(themeColor);
+        button.setBackground(GUI.themeColor);
         button.setForeground(Color.white);
         button.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -39,12 +44,13 @@ public class ComponentHelper {
     public static JPopupMenu createPopupMenu() {
         //Create the popup menu.
         final JPopupMenu popup = new JPopupMenu();
-        popup.setBackground(GUI.themeColor);
+        popup.setBackground(GUI.themeColorTwo);
+
         JMenuItem deleteItem = new JMenuItem(new AbstractAction("Delete") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(GUI.frame, "Delete selected");
-
+                System.out.println("deleting item");
             }
         });
         deleteItem.setBackground(GUI.themeColor);
@@ -54,10 +60,10 @@ public class ComponentHelper {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JOptionPane.showMessageDialog(GUI.frame, "Pin selected");
-
+                System.out.println("pinning item");
             }
         });
-        pinItem.setBackground(themeColor);
+        pinItem.setBackground(GUI.themeColorTwo);
         pinItem.setForeground(Color.white);
         popup.add(pinItem);
 
@@ -75,9 +81,9 @@ public class ComponentHelper {
 
     public static JButton createButton(JPopupMenu popup) {
 
-        JButton button = new JButton("...");
+        JButton button = new JButton("");
         button.setOpaque(true);
-        button.setBackground(new Color(55, 62, 65));
+        button.setBackground(GUI.themeColorTwo);
         button.setForeground(Color.white);
         button.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -91,7 +97,8 @@ public class ComponentHelper {
 
     public static JTextArea createTextArea(String data) {
         JTextArea textArea = new JTextArea(data);
-        textArea.setBackground(GUI.themeColor);
+        //textArea.setBackground(GUI.themeColor);
+        textArea.setOpaque(false);
         textArea.setForeground(Color.white);
         textArea.setLineWrap(true);
         textArea.setEditable(false);
@@ -101,12 +108,31 @@ public class ComponentHelper {
     public static JPanel createPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
-        panel.setPreferredSize(new Dimension(200, 50));
-        panel.setBorder(new MatteBorder(0, 0, 1, 0, GUI.themeColor));
+        panel.setPreferredSize(new Dimension(200, 80));
+        panel.setBorder(new MatteBorder(1, 1, 1, 1, GUI.themeColorTwo));
         panel.setBackground(GUI.themeColor);
         panel.setForeground(Color.white);
         return panel;
     }
 
+    public static RoundedPanel createRoundedPanel(){
+        RoundedPanel panel = new RoundedPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setPreferredSize(new Dimension(200, 80));
+        //panel.setBorder(new MatteBorder(1, 1, 1, 1, GUI.themeColorTwo));
+        panel.setBackground(GUI.themeColor);
+        panel.setForeground(Color.white);
+        return panel;
+    }
+
+    public static void addTitledBorder(JPanel panel, Border border, String title, Color color) {
+
+        TitledBorder titledBorder = BorderFactory.createTitledBorder(border, title);
+        //titledBorder.setTitleColor(color);
+        //panel.setBorder(border);
+        panel.setBackground(GUI.themeColorTwo);
+        //panel.setBorder(titledBorder);
+
+    }
 
 }
