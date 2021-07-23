@@ -1,4 +1,4 @@
-package com.example.xclipper;
+ package com.example.xclipper;
 
 import java.util.Date;
 

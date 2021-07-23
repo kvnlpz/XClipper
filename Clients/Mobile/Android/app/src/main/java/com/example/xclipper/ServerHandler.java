@@ -33,7 +33,10 @@ import androidx.annotation.Nullable;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Header;
+import com.android.volley.NetworkResponse;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -51,9 +54,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,69 +91,42 @@ public class ServerHandler extends Context {
     IO.Options options;
     ServerSocket serverSocket;
     io.socket.client.Socket socket;
+    int mResponseCode = 0;
+    private ArrayList<Message> messages;
+    private MessagesAdapter msgAdapter;
+
+
+    //http://192.168.1.20:3000/login
+    //http://10.248.1.132:3000
+
+
     String URL = "http://10.248.1.132:3000";
     String[] endpoints = {
-            "http://192.168.1.20:3000/login",
+            "http://10.0.2.2:3000/login",
             "http://10.248.1.132:3000/signup"
     };
     CookieManager cm;
     private volatile boolean running = true;
     Context context;
 
-//    java.net.CookieHandler.setDefault();
 
-
-    public ServerHandler(Context applicationContext) {
-
-        //this.mainList = mainList;
-        //this.themeColor = themeColor;
-
+    public ServerHandler(Context applicationContext, ArrayList<Message> messages, MessagesAdapter msgAdapter) {
         this.context = applicationContext;
+        this.messages = messages;
+        this.msgAdapter = msgAdapter;
         CookieHandler.setDefault(new CookieManager());
-//        URI uri = URI.create(endpoints[0]);
-//        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
-//                new javax.net.ssl.HostnameVerifier(){
-//
-//                    public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
-//                        if (hostname.equals("localhost:3000")) {
-//                            return true;
-//                        }
-//                        return false;
-//                    }
-//                });
-
-
-//        try {
-//            System.out.println("Connecting to server ");
-//            serverSocket = new ServerSocket(9000, 0, InetAddress.getLoopbackAddress());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
 
     public void connectToServer() {
         String hostname = "localhost";
         int port = 3000;
-//        Map<String, String> cook = new HashMap<>();
-//        cook.put("cookie", cookieString);
-
         System.out.println("creating options object");
         options = createOptions();
-
-        try {
-            System.out.println("inside the try block");
-            InetAddress addr = InetAddress.getByName(hostname);
-
-//            IO.socket(URI.create(endpoints[0]), options);
-            socket = IO.socket(URI.create(URL), options); // the main namespace
-            socket.connect();
-            addSocketEventListeners(socket);
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("inside the try block");
+        socket = IO.socket(URI.create(URL), options); // the main namespace
+        socket.connect();
+        addSocketEventListeners(socket);
 
 
     }
@@ -165,6 +141,9 @@ public class ServerHandler extends Context {
                 System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
                 String text = (String) args[0];
                 //ADD CLIPBOARD ITEM TO MESSAGES RECYCLERVIEW
+
+                // messages.add(new Message("testAccount", text));
+                // msgAdapter.notifyDataSetChanged();
             }
         });
         socket.on("refresh", new Emitter.Listener() {
@@ -172,10 +151,10 @@ public class ServerHandler extends Context {
             public void call(Object... args) {
                 System.out.println("THIS IS THE REFRESH FUNCTION");
                 System.out.println(args[0]);
-//                    String[] s = (String[]) args[0];
-//                    System.out.println(" COPY GOT A TEXT GOTA TEXT!!!!!!!");
-//                    String text = (String) args[0];
-//
+                // String text = (String) args[0];
+                //ADD CLIPBOARD ITEM TO MESSAGES RECYCLERVIEW
+                // messages.add(new Message("testAccount", text));
+
             }
         });
     }
@@ -211,15 +190,7 @@ public class ServerHandler extends Context {
 
     public void uploadText(String text) {
         System.out.println("uploading text");
-        socket.emit("sendNewClip", text);
-        //clipSaveStatus - SERVER SENDS TO CLIENT to notify the client that the clip was saved successfully or failed
-//        socket.on("clipSaveStatus", new Emitter.Listener() {
-//            @Override
-//            public void call(Object... args) {
-//                System.out.println("THIS IS THE REFRESH FUNCTION");
-//                System.out.println(args[0]);
-//            }
-//        });
+        socket.emit("sendNewClip", text + " COPIED FROM ANDROID EMULATOR");
     }
 
 
@@ -227,7 +198,7 @@ public class ServerHandler extends Context {
         RequestQueue queue = Volley.newRequestQueue(context);
         String url ="https://www.google.com";
 
-// Request a string response from the provided URL.
+        // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(com.android.volley.Request.Method.GET, url,
                 new com.android.volley.Response.Listener<String>(){
                     @Override
@@ -242,7 +213,7 @@ public class ServerHandler extends Context {
             }
         });
 
-// Add the request to the RequestQueue.
+        // Add the request to the RequestQueue.
         queue.add(stringRequest);
 
 
@@ -253,45 +224,19 @@ public class ServerHandler extends Context {
         System.out.println("logging in");
         String email = password + "@lol.com";
         HashMap<String, String> map = new HashMap<>();
-//        map.put("username", username);
-//        map.put("email", email);
-//        map.put("password", password);
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String requestBody1 = objectMapper
-//                .writerWithDefaultPrettyPrinter()
-//                .writeValueAsString(map);
-
-//        cm = new CookieManager();
-//        cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-
         System.out.println("making request");
-
-
-//        JSON = MediaType.get("application/json; charset=utf-8");
-
-//        client = new OkHttpClient();
-
-//        JSONObject jsonBody = new JSONObject();
-//        jsonBody.put("Title", "Android Volley Demo");
-//        jsonBody.put("Author", "BNK");
-
-//        jsonBody.put("username", username);
-//        jsonBody.put("email", email);
-//        jsonBody.put("password", password);
-//        final String requestBody = jsonBody.toString();
-
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(context);
-        //        String url ="https://www.google.com";
+        // String url ="https://www.google.com";
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(com.android.volley.Request.Method.POST, endpoints[0], new com.android.volley.Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-//                        textView.setText("Response is: " + response.substring(0, 500));
-                        responseCode[0] = Integer.parseInt(response.substring(0, 500));
+                        if (mResponseCode == 200) {
+                            System.out.println("trying to connect to the server");
+                            connectToServer();
+                        }
                     }
                 },
                 new com.android.volley.Response.ErrorListener() {
@@ -304,26 +249,6 @@ public class ServerHandler extends Context {
         }
         )
 
-//{
-//            @Override
-//            protected Map<String, String> getParams() {
-//                // below line we are creating a map for
-//                // storing our values in key and value pair.
-//                Map<String, String> params = new HashMap<String, String>();
-//
-//                // on below line we are passing our key
-//                // and value pair to our parameters.
-//                params.put("username", username);
-//                params.put("email", email);
-//                params.put("password", password);
-////                params.put("name", name);
-////                params.put("job", job);
-//
-//                // at last we are
-//                // returning our params.
-//                return params;
-//            }
-//        };
         {
 
 
@@ -333,8 +258,6 @@ public class ServerHandler extends Context {
                 JSONObject jsonObject = new JSONObject();
                 String body = null;
                 try {
-//                    jsonObject.put("username", "user123");
-//                    jsonObject.put("password", "Pass123");
                     jsonObject.put("username", username);
                     jsonObject.put("email", email);
                     jsonObject.put("password", password);
@@ -360,10 +283,22 @@ public class ServerHandler extends Context {
                 return params;
             }
 
+
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                cookieString = response.headers.get("Set-Cookie");
+                for (Header allHeader : response.allHeaders) {
+                    System.out.println(allHeader.getName() + ":" + allHeader.getValue());
+                }
+                mResponseCode = response.statusCode;
+                System.out.println("status code is: " + mResponseCode);
+                return super.parseNetworkResponse(response);
+            }
+
         };
 
 
-        int MY_SOCKET_TIMEOUT_MS=20000;
+        int MY_SOCKET_TIMEOUT_MS=5000;
 
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(
                 MY_SOCKET_TIMEOUT_MS,
@@ -375,80 +310,9 @@ public class ServerHandler extends Context {
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
 
-
-//        try {
-//            String responseBody = post("http://localhost:3000/signup", requestBody);
-//            System.out.println(responseBody);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
-//        cm.getCookieStore().getCookies().forEach(System.out::println);
-//        cookieString = cm.getCookieStore().getCookies().get(0).toString();
-//        System.out.println(cookieString);
-//
-//        System.out.println("trying to connect to server");
-//        connectToServer();
-        return responseCode[0];
+        return mResponseCode;
     }
 
-//    public int signUp(String username, String password) throws JsonProcessingException {
-//        final int[] responseCode = {0};
-//        System.out.println("signing up");
-//        String email = password + "@lol.com";
-//        HashMap<String, String> map = new HashMap<>();
-//        map.put("username", username);
-//        map.put("email", email);
-//        map.put("password", password);
-////        http://localhost:3000/signup&username=kevin12&email=kevinemail@email.com&password=nib
-//
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String requestBody = objectMapper
-//                .writerWithDefaultPrettyPrinter()
-//                .writeValueAsString(map);
-//
-//        cm = new CookieManager();
-//        cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-//
-//        System.out.println("making request");
-//        System.out.println("making request");
-//
-//
-//        JSON = MediaType.get("application/json; charset=utf-8");
-//
-//        client = new OkHttpClient();
-//
-//        try {
-//            String responseBody = post("http://localhost:3000/signup", requestBody);
-//            System.out.println(responseBody);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-////httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-////                    .thenApply(HttpResponse::statusCode)
-////                    .thenAccept(System.out::println);
-//
-//
-//        cm.getCookieStore().getCookies().forEach(System.out::println);
-//        cookieString = cm.getCookieStore().getCookies().get(0).toString();
-//        System.out.println(cookieString);
-//
-////            System.out.println("Here are the cookies: ");
-////            System.out.println(cm.getCookieStore().getCookies().toString());
-////            System.out.println(            cm.getCookieStore().getCookies().size());
-//
-//
-////        CompletableFuture.runAsync(()->{
-////            System.out.println(CookieHandler.getDefault().g;
-////        });
-////        CompletableFuture.supplyAsync(()->         CookieHandler.getDefault().toString());
-//        System.out.println("trying to connect to server");
-//        connectToServer();
-//        return responseCode[0];
-//    }
 
     public void disconnectFromServer() {
 
@@ -457,17 +321,6 @@ public class ServerHandler extends Context {
     public void uploadClipboardHistory(String history) {
 
     }
-
-//    String post(String url, String json) throws IOException {
-//        RequestBody body = RequestBody.create(JSON, json);
-//        Request request = new Request.Builder()
-//                .url(url)
-//                .post(body)
-//                .build();
-//        try (Response response = client.newCall(request).execute()) {
-//            return response.body().string();
-//        }
-//    }
 
 
     @Override

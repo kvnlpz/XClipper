@@ -1,5 +1,7 @@
 package com.example.xclipper;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,25 +19,22 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerView.Adapter adapter;
     private ArrayList<Message> messages;
+    private MessagesAdapter msgAdapter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        recyclerView = findViewById(R.id.recycler_view);
         messages = new ArrayList<>();
-        for(int i = 0; i < 100; i++){
-            messages.add(new Message("kevin", "test string lmao"));
-//            stringArrayList.add("String " + i);
-        }
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-
-//        ArrayList<Message> messages = new ArrayList<Message>();
+        // populating the messages arraylist with sample text
+        // for(int i = 0; i < 100; i++){
+        //     messages.add(new Message("kevin", "test string lmao"));
+        // }
 
         RecyclerView msgView = (RecyclerView) findViewById(R.id.recycler_view);
         msgView.setLayoutManager(new LinearLayoutManager(this));
-        MessagesAdapter msgAdapter = new MessagesAdapter(this.getLayoutInflater(), messages);
+        msgAdapter = new MessagesAdapter(this.getLayoutInflater(), messages);
         msgView.setAdapter(msgAdapter);
 
 
@@ -45,12 +44,46 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        ServerHandler serverHandler = new ServerHandler(getApplicationContext());
-        serverHandler.testRequest();
+        ServerHandler serverHandler = new ServerHandler(getApplicationContext(), messages, msgAdapter);
+        //test to see if we even have a connection
+        // serverHandler.testRequest();
         try {
-            serverHandler.logIn("miguelNarc", "passwordnine");
+            // TODO() rewrite code here lol
+            int code = serverHandler.logIn("fok12", "kk4");
+            // if(code == 200){
+            //     System.out.println("logged in");
+            //     serverHandler.connectToServer();
+            // }
         } catch (JsonProcessingException | JSONException e) {
             e.printStackTrace();
         }
+
+        // runOnUiThread(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         // Stuff that updates the UI
+        //         // int size = messages.size();
+        //         // while (true){
+        //         //     if(messages.size() > size){
+        //         //         msgAdapter.notifyDataSetChanged();
+        //         //         size = messages.size();
+        //         //     }
+        //         // }
+        //     }
+        // });
+
+        ClipboardManager clipBoard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+        clipBoard.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
+            @Override
+            public void onPrimaryClipChanged() {
+                ClipData clipData = clipBoard.getPrimaryClip();
+                ClipData.Item item = clipData.getItemAt(0);
+                String text = item.getText().toString();
+                serverHandler.uploadText(text);
+                // Access your context here using YourActivityName.this
+            }
+        });
+
     }
+
 }

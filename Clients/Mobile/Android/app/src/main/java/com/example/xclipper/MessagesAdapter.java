@@ -25,7 +25,7 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
         messagesViewHolder.view = itemMessage;
         messagesViewHolder.from = (TextView) itemMessage.findViewById(R.id.tvFrom);
         messagesViewHolder.message = (TextView) itemMessage.findViewById(R.id.tvMessage);
-//        messagesViewHolder.date = (TextView) itemMessage.findViewById(R.id.tvDate);
+        // messagesViewHolder.date = (TextView) itemMessage.findViewById(R.id.tvDate);
         return messagesViewHolder;
     }
 
@@ -34,7 +34,6 @@ public class MessagesAdapter extends RecyclerView.Adapter<MessagesAdapter.Messag
         Message message = messages.get(position);
         holder.from.setText(message.getFrom());
         holder.message.setText(message.getMessage());
-//        holder.date.setText("no date lol");
         holder.position = position;
     }
 
